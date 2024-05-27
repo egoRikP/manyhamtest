@@ -2,7 +2,7 @@ console.log("START TELEGRAM_BOT.JS");
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const {getTokensFromFile} = require("./hmstr_logic");
+const {tokens} = require("./hmstr_logic");
 
 const token = process.env.TELEGRAM_TOKEN;
 
@@ -29,7 +29,6 @@ function handleRestartCommand(msg) {
 
 function handleTokenList(msg) {
     const chatId = msg.chat.id;
-    const tokens = getTokensFromFile();
     console.log(tokens);
     sendLogMessage(tokens);
 }
