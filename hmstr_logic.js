@@ -20,7 +20,7 @@ const endpoints = {
     buyBoost: "buy-boost"
 };
 
-const ABSOLUTE_TOKENS_FILE_PATH = path.join(__dirname, TOKENS_FILE_PATH);
+const ABSOLUTE_TOKENS_FILE_PATH = '/etc/secrets/tokens.txt'; // Використовуйте абсолютний шлях
 
 const getTokensFromFile = () => {
     try {
