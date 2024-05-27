@@ -156,3 +156,8 @@ function proccessTokensFreeAndTap(tokens) {
 
 cron.schedule(`*/${TIME_TAP} * * * *`, () => proccessTokensTap(tokens));
 cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens));
+
+
+module.exports = {
+    getTokensFromFile,
+};
