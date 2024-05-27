@@ -18,7 +18,7 @@ const endpoints = {
 
 const getTokensFromFile = () => {
     try {
-        return fs.readFileSync('/etc/secrets/tokens.txt', 'utf8').trim().split('\n');
+        return fs.readFileSync('etc/secrets/tokens.txt', 'utf8').trim().split('\n');
     } catch (error) {
         console.error("Error reading tokens from file: ", error);
         sendLogMessage("Error reading tokens from file: " + error.message);
@@ -138,9 +138,17 @@ const processFreeTapsAndTap = async (token) => {
     }
 };
 
-const scheduleTasks = (token) => {
-    cron.schedule(`*/${TIME_TAP}* * * *`, () => processTap(token));
-    cron.schedule(`0 0 */${FREE_TAP} * * *`, () => processFreeTapsAndTap(token));
-};
+function proccessTokensTap(tokens) {
+    tokens.forEach((e) => {
+        processTap(e);
+    });
+}
 
-tokens.forEach(scheduleTasks);
+function proccessTokensFreeAndTap(tokens) {
+    tokens.forEach((e) => {
+        processFreeTapsAndTap(e);
+    })
+}
+
+cron.schedule(`*/${TIME_TAP}* * * *`, () => proccessTokensTap(tokens));
+cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens));
