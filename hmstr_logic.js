@@ -31,7 +31,6 @@ const getTokensFromFile = () => {
 };
 
 const tokens = getTokensFromFile();
-console.log(tokens);
 
 const currentTimestamp = () => Math.floor(Date.now() / 1000);
 
@@ -160,7 +159,7 @@ function proccessTokensFreeAndTap(tokens) {
 cron.schedule(`*/${TIME_TAP} * * * *`, () => proccessTokensTap(tokens));
 cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens));
 
-
 module.exports = {
     getTokensFromFile,
+    tokens
 };
