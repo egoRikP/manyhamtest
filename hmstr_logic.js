@@ -18,7 +18,7 @@ const endpoints = {
 
 const getTokensFromFile = () => {
     try {
-        return fs.readFileSync('etc/secrets/tokens.txt', 'utf8').trim().split('\n');
+        return fs.readFileSync('./etc/secrets/tokens.txt', 'utf8').trim().split('\n');
     } catch (error) {
         console.error("Error reading tokens from file: ", error);
         sendLogMessage("Error reading tokens from file: " + error.message);
