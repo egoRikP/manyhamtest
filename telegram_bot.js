@@ -2,7 +2,7 @@ console.log("START TELEGRAM_BOT.JS");
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const {tokens} = require("./hmstr_logic");
+const {getTokensFromFile} = require("./hmstr_logic");
 
 const token = process.env.TELEGRAM_TOKEN;
 
@@ -16,8 +16,8 @@ const commandHandlers = {
     '/tokens': handleTokenList
 };
 
-bot.on('polling_error', console.log);
-bot.on('webhook_error', console.error);
+// bot.on('polling_error', console.log);
+// bot.on('webhook_error', console.error);
 
 function handleStatusCommand(msg) {
     const chatId = msg.chat.id;
@@ -31,11 +31,12 @@ function handleRestartCommand(msg) {
 }
 
 function handleTokenList(msg) {
+    let tokens = getTokensFromFile();
     console.log(tokens);
-
     let tokenstext = '';
 
     tokens.forEach((token, index, array) => {
+        console.log(token);
         tokenstext += token + '\n';
     });
 

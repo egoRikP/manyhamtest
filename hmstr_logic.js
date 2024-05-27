@@ -160,5 +160,5 @@ cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens))
 
 
 module.exports = {
-    tokens,
+    getTokensFromFile,
 };
