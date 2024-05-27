@@ -16,6 +16,9 @@ const commandHandlers = {
     '/tokens': handleTokenList
 };
 
+bot.on('polling_error', console.log);
+bot.on('webhook_error', console.error);
+
 function handleStatusCommand(msg) {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, 'Статус бота: працює');
