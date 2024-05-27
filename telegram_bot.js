@@ -2,7 +2,7 @@ console.log("START TELEGRAM_BOT.JS");
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const {getTokensFromFile, tokens} = require('hmstr_logic.js');
+const {getTokensFromFile, tokens} = require('./hmstr_logic');
 
 const token = process.env.TELEGRAM_TOKEN;
 
@@ -22,6 +22,7 @@ bot.on('polling_error', console.log);
 
 function handleStatusCommand(msg) {
     const chatId = msg.chat.id;
+    console.log(tokens);
     bot.sendMessage(chatId, 'Статус бота: працює');
 }
 
