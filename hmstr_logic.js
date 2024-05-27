@@ -8,8 +8,8 @@ const {sendLogMessage} = require('./telegram_bot');
 
 const TOKENS_FILE_PATH = process.env.TOKENS_FILE_PATH || './etc/secrets/tokens.txt';
 
-const TIME_TAP = process.env.TIME_TAP;
-const FREE_TAP = process.env.FREE_TAP;
+const TIME_TAP = process.env.TIME_TAP || 30;
+const FREE_TAP = process.env.FREE_TAP || 3;
 
 const baseURL = "https://api.hamsterkombat.io/clicker/";
 const endpoints = {
@@ -20,7 +20,7 @@ const endpoints = {
     buyBoost: "buy-boost"
 };
 
-const ABSOLUTE_TOKENS_FILE_PATH = '/etc/secrets/tokens.txt'; // Використовуйте абсолютний шлях
+const ABSOLUTE_TOKENS_FILE_PATH = './etc/secrets/tokens.txt'; // Використовуйте абсолютний шлях
 
 const getTokensFromFile = () => {
     try {
@@ -156,5 +156,5 @@ function proccessTokensFreeAndTap(tokens) {
     })
 }
 
-cron.schedule(`*/${TIME_TAP}* * * *`, () => proccessTokensTap(tokens));
+cron.schedule(`*/${TIME_TAP} * * * *`, () => proccessTokensTap(tokens));
 cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens));
