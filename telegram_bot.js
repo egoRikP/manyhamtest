@@ -16,8 +16,7 @@ const commandHandlers = {
     '/tokens': handleTokenList
 };
 
-bot.on('polling_error', console.log);
-
+// bot.on('polling_error', console.log);
 // bot.on('webhook_error', console.error);
 
 const getTokensFromFile = () => {
@@ -29,7 +28,6 @@ const getTokensFromFile = () => {
         process.exit(1);
     }
 };
-
 
 
 function handleStatusCommand(msg) {
@@ -45,12 +43,11 @@ function handleRestartCommand(msg) {
 
 function handleTokenList(msg) {
     let tokens = getTokensFromFile();
-    console.log(tokens);
+    //console.log(tokens);
     let tokenstext = '';
 
-    tokens.forEach((token, index, array) => {
-        console.log(token);
-        tokenstext += token + '\n';
+    tokens.forEach((token) => {
+        tokenstext += token + '\n' + '\n';
     });
 
     sendLogMessage(tokenstext);

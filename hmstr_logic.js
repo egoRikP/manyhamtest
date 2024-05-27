@@ -6,6 +6,8 @@ const path = require('path');
 
 const {sendLogMessage} = require('./telegram_bot');
 
+const {fileReader} = require("./utils/fileReader.js");
+
 const TOKENS_FILE_PATH = process.env.TOKENS_FILE_PATH || './etc/secrets/tokens.txt';
 
 const TIME_TAP = process.env.TIME_TAP || 30;
@@ -158,6 +160,13 @@ function proccessTokensFreeAndTap(tokens) {
 
 cron.schedule(`*/${TIME_TAP} * * * *`, () => proccessTokensTap(tokens));
 cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens));
+
+function test() {
+    const tokens = fileReader(process.env.TOKENS_FILE_PATH);
+    console.log(tokens);
+}
+
+test();
 
 module.exports = {
     getTokensFromFile,
