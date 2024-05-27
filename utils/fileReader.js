@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-export const fileReader = (path) => {
+const fileReader = (path) => {
     try {
         return fs.readFileSync(path, 'utf8').trim().split('\n');
     } catch (error) {
@@ -8,3 +8,7 @@ export const fileReader = (path) => {
         return error;
     }
 }
+
+module.exports = {
+    fileReader
+};
