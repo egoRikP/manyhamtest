@@ -31,9 +31,9 @@ const getTokensFromFile = () => {
 };
 
 
+
 function handleStatusCommand(msg) {
     const chatId = msg.chat.id;
-    console.log(tokens);
     bot.sendMessage(chatId, 'Статус бота: працює');
 }
 
