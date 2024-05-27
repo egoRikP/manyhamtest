@@ -20,11 +20,9 @@ const endpoints = {
     buyBoost: "buy-boost"
 };
 
-const ABSOLUTE_TOKENS_FILE_PATH = './etc/secrets/tokens.txt'; // Використовуйте абсолютний шлях
-
 const getTokensFromFile = () => {
     try {
-        return fs.readFileSync(ABSOLUTE_TOKENS_FILE_PATH, 'utf8').trim().split('\n');
+        return fs.readFileSync(TOKENS_FILE_PATH, 'utf8').trim().split('\n');
     } catch (error) {
         console.error("Error reading tokens from file: ", error);
         sendLogMessage("Error reading tokens from file: " + error.message);
