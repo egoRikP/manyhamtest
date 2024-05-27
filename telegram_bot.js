@@ -2,7 +2,7 @@ console.log("START TELEGRAM_BOT.JS");
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const {getTokensFromFile, tokens} = require('./hmstr_logic');
+const fs = require("fs");
 
 const token = process.env.TELEGRAM_TOKEN;
 
@@ -19,6 +19,17 @@ const commandHandlers = {
 bot.on('polling_error', console.log);
 
 // bot.on('webhook_error', console.error);
+
+const getTokensFromFile = () => {
+    try {
+        return fs.readFileSync(process.env.TOKENS_FILE_PATH, 'utf8').trim().split('\n');
+    } catch (error) {
+        console.error("Error reading tokens from file: ", error);
+        sendLogMessage("Error reading tokens from file: " + error.message);
+        process.exit(1);
+    }
+};
+
 
 function handleStatusCommand(msg) {
     const chatId = msg.chat.id;
