@@ -2,7 +2,7 @@ console.log("START TELEGRAM_BOT.JS");
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const { getTokensFromFile } = require('./hmstr_logic.js');
+const {getTokensFromFile} = require('./hmstr_logic.js');
 
 const token = process.env.TELEGRAM_TOKEN;
 
@@ -16,7 +16,8 @@ const commandHandlers = {
     '/tokens': handleTokenList
 };
 
-// bot.on('polling_error', console.log);
+bot.on('polling_error', console.log);
+
 // bot.on('webhook_error', console.error);
 
 function handleStatusCommand(msg) {
