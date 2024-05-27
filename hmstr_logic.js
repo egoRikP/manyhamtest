@@ -2,6 +2,8 @@ console.log("START HTSTR_LOGIC.JS");
 const axios = require('axios');
 const cron = require('node-cron');
 const fs = require('fs');
+const path = require('path');
+
 const {sendLogMessage} = require('./telegram_bot');
 
 const TOKENS_FILE_PATH = process.env.TOKENS_FILE_PATH || './etc/secrets/tokens.txt';
@@ -18,9 +20,11 @@ const endpoints = {
     buyBoost: "buy-boost"
 };
 
+const ABSOLUTE_TOKENS_FILE_PATH = path.join(__dirname, TOKENS_FILE_PATH);
+
 const getTokensFromFile = () => {
     try {
-        return fs.readFileSync(TOKENS_FILE_PATH, 'utf8').trim().split('\n');
+        return fs.readFileSync(ABSOLUTE_TOKENS_FILE_PATH, 'utf8').trim().split('\n');
     } catch (error) {
         console.error("Error reading tokens from file: ", error);
         sendLogMessage("Error reading tokens from file: " + error.message);
