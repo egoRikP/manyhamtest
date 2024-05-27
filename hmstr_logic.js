@@ -116,6 +116,7 @@ const analyzeUpgrades = (upgrades) =>
 const processTap = async (token) => {
     try {
         console.log(`ТОКЕН: ${token}`);
+        sendLogMessage(`ТОКЕН: ${token}`);
         const tapMessage = "ПРОЙШЛО 33 ХВ - КЛІКАЮ!";
         sendLogMessage(tapMessage);
         console.log(tapMessage);
@@ -131,6 +132,7 @@ const processTap = async (token) => {
 const processFreeTapsAndTap = async (token) => {
     try {
         console.log(`ТОКЕН: ${token}`);
+        sendLogMessage(`ТОКЕН: ${token}`);
         const freeTapMessage = "ПРОЙШЛИ 3 ГОДИНИ - БЕРЕМО ФРІ КЛІКИ!";
         sendLogMessage(freeTapMessage);
         console.log(freeTapMessage);
