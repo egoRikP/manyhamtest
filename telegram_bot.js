@@ -31,7 +31,7 @@ function handleTokenList(msg) {
     const chatId = msg.chat.id;
     const tokens = getTokensFromFile();
     console.log(tokens);
-    bot.sendMessage(chatId, 'Токени:' + tokens);
+    sendLogMessage(tokens);
 }
 
 for (const [command, handler] of Object.entries(commandHandlers)) {
