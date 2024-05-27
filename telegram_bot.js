@@ -2,7 +2,7 @@ console.log("START TELEGRAM_BOT.JS");
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const {getTokensFromFile} = require("./hmstr_logic");
+const { getTokensFromFile } = require('./hmstr_logic.js');
 
 const token = process.env.TELEGRAM_TOKEN;
 
