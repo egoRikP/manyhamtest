@@ -31,10 +31,17 @@ function handleRestartCommand(msg) {
 }
 
 function handleTokenList(msg) {
-    const chatId = msg.chat.id;
     console.log(tokens);
-    sendLogMessage(tokens);
+
+    let tokenstext = '';
+
+    tokens.forEach((token, index, array) => {
+        tokenstext += token + '\n';
+    });
+
+    sendLogMessage(tokenstext);
 }
+
 
 for (const [command, handler] of Object.entries(commandHandlers)) {
     bot.onText(new RegExp(`^${command}$`), handler);
