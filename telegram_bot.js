@@ -13,6 +13,7 @@ const bot = new TelegramBot(token, {polling: true});
 const commandHandlers = {
     '/status': handleStatusCommand,
     '/restart': handleRestartCommand,
+    '/tokens': handleTokenList
 };
 
 function handleStatusCommand(msg) {
