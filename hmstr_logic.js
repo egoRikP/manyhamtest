@@ -4,6 +4,8 @@ const cron = require('node-cron');
 const fs = require('fs');
 const {sendLogMessage} = require('./telegram_bot');
 
+const TOKENS_FILE_PATH = process.env.TOKENS_FILE_PATH || './etc/secrets/tokens.txt';
+
 const TIME_TAP = process.env.TIME_TAP;
 const FREE_TAP = process.env.FREE_TAP;
 
@@ -18,7 +20,7 @@ const endpoints = {
 
 const getTokensFromFile = () => {
     try {
-        return fs.readFileSync('./etc/secrets/tokens.txt', 'utf8').trim().split('\n');
+        return fs.readFileSync(TOKENS_FILE_PATH, 'utf8').trim().split('\n');
     } catch (error) {
         console.error("Error reading tokens from file: ", error);
         sendLogMessage("Error reading tokens from file: " + error.message);
