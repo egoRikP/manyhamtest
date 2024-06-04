@@ -122,7 +122,7 @@ const processTap = async (token) => {
         sendLogMessage(tapMessage);
         console.log(tapMessage);
         await tap(token);
-        //await processUpgrades(token);
+        await processUpgrades(token);
     } catch (error) {
         const errorMessage = 'Помилка під час кліка: ' + error.message;
         sendLogMessage(errorMessage);
