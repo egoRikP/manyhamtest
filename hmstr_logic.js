@@ -64,7 +64,7 @@ const buyUpgradeOrBoost = async ({upgradeId, boostId}, token) => {
     try {
         await sendRequest(endpoint, {upgradeId, boostId, timestamp: currentTimestamp()}, token);
         const successMessage = `Успішно куплено ${upgradeId ? 'апгрейд' : 'буст'} з ID: ${id}`;
-        sendLogMessage(successMessage);
+        // sendLogMessage(successMessage);
         console.log(successMessage);
     } catch (error) {
         const errorMessage = error.response && error.response.data && error.response.data.error_code === "INSUFFICIENT_FUNDS"
@@ -94,7 +94,7 @@ const processUpgrades = async (token) => {
         const bestOffersMessage = "Найвигідніші доступні акції:\n" + bestOffers.map((offer, index) =>
             `${index + 1}. ID: ${offer.id}, Назва: ${offer.name}, Ціна: ${offer.price}, Профіт: ${offer.profitPerHourDelta}, Відношення профіту до ціни: ${(offer.profitPerHourDelta / offer.price).toFixed(5)}`
         ).join('\n');
-        sendLogMessage(bestOffersMessage);
+        // sendLogMessage(bestOffersMessage);
         console.log(bestOffersMessage);
         await buyUpgrades(bestOffers, token);
     } catch (error) {
@@ -117,10 +117,7 @@ const analyzeUpgrades = (upgrades) =>
 const processTap = async (token) => {
     try {
         console.log(`ТОКЕН: ${token}`);
-        sendLogMessage(`ТОКЕН: ${token}`);
-        const tapMessage = "ПРОЙШЛО 33 ХВ - КЛІКАЮ!";
-        sendLogMessage(tapMessage);
-        console.log(tapMessage);
+        sendLogMessage(`ПРОЙШЛО 33 ХВ - КЛІКАЮ! ${token}`);
         await tap(token);
         await processUpgrades(token);
     } catch (error) {
