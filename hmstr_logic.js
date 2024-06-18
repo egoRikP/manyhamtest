@@ -177,7 +177,7 @@ const dailyMoney = async (token) => {
 
 cron.schedule(`*/${TIME_TAP} * * * *`, () => proccessTokensTap(tokens));
 cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens));
-cron.schedule("58 18 * * *", proccessTokensDaily(tokens));
+cron.schedule("58 18 * * *", () => proccessTokensDaily(tokens));
 
 function test() {
     const tokens = fileReader(process.env.TOKENS_FILE_PATH);
