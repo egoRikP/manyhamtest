@@ -155,6 +155,26 @@ function proccessTokensFreeAndTap(tokens) {
     })
 }
 
+function proccessTokensDaily(tokens) {
+    tokens.forEach((e) => {
+        dailyMoney(e);
+    })
+}
+
+const dailyMoney = async (token) => {
+    try {
+        const response = await axios.post("https://api.hamsterkombat.io/clicker/check-task", {
+            "taskId":"streak_days"
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+    } catch (error) {
+        throw new Error(`Помилка в надсиланні запиту на ${endpoint}: ${error.response ? `HTTP ${error.response.status}: ${JSON.stringify(error.response.data)}` : error.message}`);
+    }
+};
+
 cron.schedule(`*/${TIME_TAP} * * * *`, () => proccessTokensTap(tokens));
 cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens));
 
