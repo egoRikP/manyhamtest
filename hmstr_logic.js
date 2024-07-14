@@ -13,7 +13,7 @@ const TOKENS_FILE_PATH = process.env.TOKENS_FILE_PATH || './etc/secrets/tokens.t
 const TIME_TAP = process.env.TIME_TAP || 30;
 const FREE_TAP = process.env.FREE_TAP || 3;
 
-const baseURL = "https://api.hamsterkombat.io/clicker/";
+const baseURL = "https://api.hamsterkombatgame.io/clicker/";
 const endpoints = {
     sync: "sync",
     tap: "tap",
