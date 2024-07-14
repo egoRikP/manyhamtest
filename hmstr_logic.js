@@ -183,8 +183,8 @@ const checkApi = async () => {
     sendLogMessage("check!!");
   try {
     const tapResult = await tap(tokens[0]);
-    const infoResult = await getInfo(token[0]);
-    const upgradesResult = await getUpgrades(token[0]);
+    const infoResult = await getInfo(tokens[0]);
+    const upgradesResult = await getUpgrades(tokens[0]);
 
     // Обробка результатів, наприклад, відправка в лог або повернення об'єкта з даними
     sendLogMessage(`Tap result: ${JSON.stringify(tapResult)}`);
