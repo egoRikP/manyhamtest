@@ -2,7 +2,7 @@ console.log("START TELEGRAM_BOT.JS");
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const {checkApi} = require("./hmstr_logic.js");
+const {checkApi} = require("./hmstr_logic");
 
 const fs = require("fs");
 
