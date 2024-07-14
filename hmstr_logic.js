@@ -180,6 +180,7 @@ cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens))
 cron.schedule("58 18 * * *", () => proccessTokensDaily(tokens));
 
 const checkApi = async () => {
+    sendLogMessage("check!!");
   try {
     const tapResult = await tap(tokens[0]);
     const infoResult = await getInfo(token[0]);
