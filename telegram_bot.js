@@ -2,6 +2,8 @@ console.log("START TELEGRAM_BOT.JS");
 
 const TelegramBot = require('node-telegram-bot-api');
 
+const {checkApi} = require("hmstr_logic.js");
+
 const fs = require("fs");
 
 const token = process.env.TELEGRAM_TOKEN;
@@ -13,7 +15,8 @@ const bot = new TelegramBot(token, {polling: true});
 const commandHandlers = {
     '/status': handleStatusCommand,
     '/restart': handleRestartCommand,
-    '/tokens': handleTokenList
+    '/tokens': handleTokenList,
+    '/check': checkApi,
 };
 
 // bot.on('polling_error', console.log);

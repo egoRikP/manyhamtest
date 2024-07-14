@@ -179,14 +179,14 @@ cron.schedule(`*/${TIME_TAP} * * * *`, () => proccessTokensTap(tokens));
 cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens));
 cron.schedule("58 18 * * *", () => proccessTokensDaily(tokens));
 
-function test() {
-    const tokens = fileReader(process.env.TOKENS_FILE_PATH);
-    console.log(tokens);
+const checkApi = () => {
+    tap(tokens[0]).then((res) => {sendLogMessage(res.data)});
+    getInfo(tokens[0]).then((res) => {sendLogMessage(res.data)});
+    getUpgrades(tokens[0]).then((res) => {sendLogMessage(res.data)});
 }
-
-test();
 
 module.exports = {
     getTokensFromFile,
-    tokens
+    tokens,
+    checkApi
 };
