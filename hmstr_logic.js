@@ -179,11 +179,25 @@ cron.schedule(`*/${TIME_TAP} * * * *`, () => proccessTokensTap(tokens));
 cron.schedule(`0 0 */${FREE_TAP} * * *`, () => proccessTokensFreeAndTap(tokens));
 cron.schedule("58 18 * * *", () => proccessTokensDaily(tokens));
 
-const checkApi = () => {
-    tap(tokens[0]).then((res) => {sendLogMessage(res.data)});
-    getInfo(tokens[0]).then((res) => {sendLogMessage(res.data)});
-    getUpgrades(tokens[0]).then((res) => {sendLogMessage(res.data)});
-}
+const checkApi = async () => {
+  try {
+    const tapResult = await tap(tokens[0]);
+    const infoResult = await getInfo(token[0]);
+    const upgradesResult = await getUpgrades(token[0]);
+
+    // Обробка результатів, наприклад, відправка в лог або повернення об'єкта з даними
+    sendLogMessage(`Tap result: ${JSON.stringify(tapResult)}`);
+    sendLogMessage(`Info result: ${JSON.stringify(infoResult)}`);
+    sendLogMessage(`Upgrades result: ${JSON.stringify(upgradesResult)}`);
+
+    return { tapResult, infoResult, upgradesResult };
+  } catch (error) {
+    console.error('Error in checkApi:', error);
+    sendLogMessage(`Error in checkApi: ${error.message}`);
+    throw error; // або повернути відповідний результат помилки
+  }
+};
+
 
 module.exports = {
     getTokensFromFile,
