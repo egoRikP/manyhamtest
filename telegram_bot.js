@@ -19,8 +19,14 @@ const commandHandlers = {
     '/check': checkApi,
 };
 
-bot.on('polling_error', console.log);
-// bot.on('webhook_error', console.error);
+bot.on('polling_error', (error) => {
+    console.error('Polling error:', error);
+    sendLogMessage('Polling error: ' + error.message);
+});
+bot.on('webhook_error', (error) => {
+    console.error('Webhook error:', error);
+    sendLogMessage('Webhook error: ' + error.message);
+});
 
 const getTokensFromFile = () => {
     try {
