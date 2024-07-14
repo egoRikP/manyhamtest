@@ -19,7 +19,7 @@ const commandHandlers = {
     '/check': checkApi,
 };
 
-// bot.on('polling_error', console.log);
+bot.on('polling_error', console.log);
 // bot.on('webhook_error', console.error);
 
 const getTokensFromFile = () => {
