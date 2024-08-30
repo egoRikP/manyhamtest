@@ -12,11 +12,14 @@ const groupId = '-4268517821';
 
 const bot = new TelegramBot(token, {polling: true});
 
+const {fileReader} = require("./utils/fileReader.js");
+
 const commandHandlers = {
     '/status': handleStatusCommand,
     '/restart': handleRestartCommand,
     '/tokens': handleTokenList,
     '/check': checkApi,
+    '/file':handleConfigFile,
 };
 
 bot.on('polling_error', (error) => {
@@ -38,6 +41,10 @@ const getTokensFromFile = () => {
     }
 };
 
+function handleConfigFile() {
+    console.log(JSON.parse(fileReader("./etc/secrets/config.json"));
+    bot.sendMessage(JSON.parse(fileReader("./etc/secrets/config.json")), 'Статус бота: працює');
+}
 
 function handleStatusCommand(msg) {
     const chatId = msg.chat.id;
