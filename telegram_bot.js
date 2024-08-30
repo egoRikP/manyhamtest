@@ -62,7 +62,7 @@ function handleConfigFile(msg, match) {
     const chatId = msg.chat.id;
     if (match && match[1]) {
         const fileName = match[1];
-        const filePath = path.resolve(__dirname, 'etc/secrets', fileName);
+        const filePath = path.resolve(__dirname, './etc/secrets', fileName);
 
         try {
             const data = fs.readFileSync(filePath, 'utf8');
