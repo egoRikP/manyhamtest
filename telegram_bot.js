@@ -3,11 +3,14 @@ console.log("START TELEGRAM_BOT.JS");
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require("fs");
 const path = require('path');
+const axios = require('axios');
 
 const token = process.env.TELEGRAM_TOKEN;
 const groupId = '-4268517821';
 const bot = new TelegramBot(token, { polling: true });
 const fileDirectory = '/etc/secrets'; // Директорія для файлів
+const renderApiUrl = 'https://api.render.com/v1/services/srv-cpa4gjtds78s73cr1rug/secret-files/'; // URL API
+const bearerToken = 'rnd_Ldv8aQTr3XHGjPgmkbmVCeMgvdmb'; // Bearer Token
 
 let downloadingFile = {}; // Зберігає інформацію про файл, який завантажується
 
@@ -114,24 +117,26 @@ bot.on('document', (msg) => {
     if (downloadingFile[chatId]) {
         bot.getFile(fileId).then(fileInfo => {
             const filePath = path.join(__dirname, 'downloads', msg.document.file_name);
-            const fileStream = fs.createWriteStream(filePath);
-
             bot.downloadFile(fileId, __dirname + '/downloads').then(() => {
-                fs.readFile(filePath, 'utf8', (err, data) => {
+                fs.readFile(filePath, 'utf8', async (err, data) => {
                     if (err) {
                         bot.sendMessage(chatId, `Помилка при читанні нового файлу: ${err.message}`);
                         return;
                     }
                     
-                    const originalFilePath = path.join(fileDirectory, downloadingFile[chatId]);
-                    fs.writeFile(originalFilePath, data, 'utf8', (err) => {
-                        if (err) {
-                            bot.sendMessage(chatId, `Помилка при оновленні файлу ${downloadingFile[chatId]}: ${err.message}`);
-                            return;
-                        }
+                    const apiUrl = renderApiUrl + downloadingFile[chatId];
+                    try {
+                        await axios.put(apiUrl, { content: data }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${bearerToken}`
+                            }
+                        });
                         bot.sendMessage(chatId, `Файл ${downloadingFile[chatId]} успішно оновлено.`);
-                        delete downloadingFile[chatId]; // Очищаємо запис про редагування
-                    });
+                    } catch (error) {
+                        bot.sendMessage(chatId, `Помилка при оновленні файлу ${downloadingFile[chatId]}: ${error.message}`);
+                    }
+                    delete downloadingFile[chatId]; // Очищаємо запис про редагування
                 });
             }).catch(error => {
                 bot.sendMessage(chatId, `Помилка при завантаженні нового файлу: ${error.message}`);
