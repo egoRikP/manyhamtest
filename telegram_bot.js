@@ -16,7 +16,7 @@ const commandHandlers = {
     '/status': handleStatusCommand,
     '/restart': handleRestartCommand,
     '/tokens': handleTokenList,
-    '/check': checkApi,
+    // '/check': checkApi,
     '/file': handleConfigFile,
     '/download': handleDownloadCommand,
     '/edit': handleEditCommand,
