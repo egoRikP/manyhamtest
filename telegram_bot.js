@@ -42,8 +42,9 @@ const getTokensFromFile = () => {
 };
 
 function handleConfigFile() {
-    console.log(JSON.parse(fileReader("./etc/secrets/config.json")));
-    bot.sendMessage(JSON.parse(fileReader("./etc/secrets/config.json")));
+    // console.log(JSON.parse(fileReader("./etc/secrets/config.json")).hamster.baseUrl);
+    console.log(JSON.parse(fs.readFileSync("./etc/secrets/config.json", 'utf8')).hamster.baseUrl);
+    // bot.sendMessage(JSON.parse(fileReader("./etc/secrets/config.json")).hamster.baseUrl);
 }
 
 function handleStatusCommand(msg) {
