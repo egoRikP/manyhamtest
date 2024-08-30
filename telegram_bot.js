@@ -1,31 +1,29 @@
 console.log("START TELEGRAM_BOT.JS");
 
 const TelegramBot = require('node-telegram-bot-api');
-
-const {checkApi} = require("./hmstr_logic");
-
 const fs = require("fs");
+const path = require('path');
+
+const { checkApi } = require("./hmstr_logic");
+const { fileReader } = require("./utils/fileReader.js");
 
 const token = process.env.TELEGRAM_TOKEN;
-
 const groupId = '-4268517821';
-
-const bot = new TelegramBot(token, {polling: true});
-
-const {fileReader} = require("./utils/fileReader.js");
+const bot = new TelegramBot(token, { polling: true });
 
 const commandHandlers = {
     '/status': handleStatusCommand,
     '/restart': handleRestartCommand,
     '/tokens': handleTokenList,
     '/check': checkApi,
-    '/file':handleConfigFile,
+    '/file': handleConfigFile,
 };
 
 bot.on('polling_error', (error) => {
     console.error('Polling error:', error);
     sendLogMessage('Polling error: ' + error.message);
 });
+
 bot.on('webhook_error', (error) => {
     console.error('Webhook error:', error);
     sendLogMessage('Webhook error: ' + error.message);
@@ -41,21 +39,10 @@ const getTokensFromFile = () => {
     }
 };
 
-function handleConfigFile() {
-    try {
-        const data = fs.readFileSync("./etc/secrets/config.json", 'utf8');
-        const json = JSON.parse(data);
-        console.log(json.hamster.baseUrl);
-    } catch (error) {
-        console.error("Error reading or parsing the config file:", error);
-    }
-}
-
 function handleStatusCommand(msg) {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, 'Статус бота: працює');
 }
-
 
 function handleRestartCommand(msg) {
     const chatId = msg.chat.id;
@@ -64,19 +51,33 @@ function handleRestartCommand(msg) {
 
 function handleTokenList(msg) {
     let tokens = getTokensFromFile();
-    //console.log(tokens);
     let tokenstext = '';
-
     tokens.forEach((token) => {
         tokenstext += token + '\n' + '\n';
     });
-
     sendLogMessage(tokenstext);
 }
 
+function handleConfigFile(msg, match) {
+    const chatId = msg.chat.id;
+    if (match && match[1]) {
+        const fileName = match[1];
+        const filePath = path.resolve(__dirname, 'etc/secrets', fileName);
+
+        try {
+            const data = fs.readFileSync(filePath, 'utf8');
+            bot.sendMessage(chatId, `Вміст файлу ${fileName}:\n${data}`);
+        } catch (error) {
+            console.error(`Error reading or parsing the config file: ${filePath}`, error);
+            bot.sendMessage(chatId, `Помилка при читанні файлу ${fileName}: ${error.message}`);
+        }
+    } else {
+        bot.sendMessage(chatId, 'Будь ласка, вкажіть ім\'я файлу.');
+    }
+}
 
 for (const [command, handler] of Object.entries(commandHandlers)) {
-    bot.onText(new RegExp(`^${command}$`), handler);
+    bot.onText(new RegExp(`^${command} ?(.*)$`), handler);
 }
 
 const sendLogMessage = (message) => {
