@@ -61,18 +61,18 @@ function handleTokenList(msg) {
 function handleConfigFile(msg, match) {
     const chatId = msg.chat.id;
     if (match && match[1]) {
-        const fileName = match[1];
-        const filePath = path.resolve(__dirname, './etc/secrets', fileName);
+        const filePath = match[1];
+        const fullPath = path.resolve(__dirname, filePath);
 
         try {
-            const data = fs.readFileSync(filePath, 'utf8');
-            bot.sendMessage(chatId, `Вміст файлу ${fileName}:\n${data}`);
+            const data = fs.readFileSync(fullPath, 'utf8');
+            bot.sendMessage(chatId, `Вміст файлу ${filePath}:\n${data}`);
         } catch (error) {
-            console.error(`Error reading or parsing the config file: ${filePath}`, error);
-            bot.sendMessage(chatId, `Помилка при читанні файлу ${fileName}: ${error.message}`);
+            console.error(`Error reading or parsing the config file: ${fullPath}`, error);
+            bot.sendMessage(chatId, `Помилка при читанні файлу ${filePath}: ${error.message}`);
         }
     } else {
-        bot.sendMessage(chatId, 'Будь ласка, вкажіть ім\'я файлу.');
+        bot.sendMessage(chatId, 'Будь ласка, вкажіть шлях до файлу.');
     }
 }
 
