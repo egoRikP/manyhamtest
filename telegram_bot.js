@@ -42,9 +42,13 @@ const getTokensFromFile = () => {
 };
 
 function handleConfigFile() {
-    // console.log(JSON.parse(fileReader("./etc/secrets/config.json")).hamster.baseUrl);
-    console.log(JSON.parse(fs.readFileSync("./etc/secrets/config.json", 'utf8')).hamster.baseUrl);
-    // bot.sendMessage(JSON.parse(fileReader("./etc/secrets/config.json")).hamster.baseUrl);
+    try {
+        const data = fs.readFileSync("./etc/secrets/config.json", 'utf8');
+        const json = JSON.parse(data);
+        console.log(json.hamster.baseUrl);
+    } catch (error) {
+        console.error("Error reading or parsing the config file:", error);
+    }
 }
 
 function handleStatusCommand(msg) {
