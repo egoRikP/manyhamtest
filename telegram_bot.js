@@ -4,21 +4,25 @@ const TelegramBot = require('node-telegram-bot-api');
 const fs = require("fs");
 const path = require('path');
 
-const { checkApi } = require("./hmstr_logic");
-const { fileReader } = require("./utils/fileReader.js");
-
 const token = process.env.TELEGRAM_TOKEN;
 const groupId = '-4268517821';
 const bot = new TelegramBot(token, { polling: true });
+const fileDirectory = '/etc/secrets'; // Директорія для файлів
 
+let downloadingFile = {}; // Зберігає інформацію про файл, який завантажується
+
+// Функції для обробки команд
 const commandHandlers = {
     '/status': handleStatusCommand,
     '/restart': handleRestartCommand,
     '/tokens': handleTokenList,
     '/check': checkApi,
     '/file': handleConfigFile,
+    '/download': handleDownloadCommand,
+    '/edit': handleEditCommand,
 };
 
+// Обробка помилок
 bot.on('polling_error', (error) => {
     console.error('Polling error:', error);
     sendLogMessage('Polling error: ' + error.message);
@@ -29,6 +33,7 @@ bot.on('webhook_error', (error) => {
     sendLogMessage('Webhook error: ' + error.message);
 });
 
+// Функція для отримання токенів з файлу
 const getTokensFromFile = () => {
     try {
         return fs.readFileSync(process.env.TOKENS_FILE_PATH, 'utf8').trim().split('\n');
@@ -39,6 +44,7 @@ const getTokensFromFile = () => {
     }
 };
 
+// Обробка команд
 function handleStatusCommand(msg) {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, 'Статус бота: працює');
@@ -62,7 +68,7 @@ function handleConfigFile(msg, match) {
     const chatId = msg.chat.id;
     if (match && match[1]) {
         const fileName = match[1];
-        const filePath = path.join('/etc/secrets', fileName);
+        const filePath = path.join(fileDirectory, fileName);
 
         try {
             const data = fs.readFileSync(filePath, 'utf8');
@@ -76,10 +82,72 @@ function handleConfigFile(msg, match) {
     }
 }
 
+function handleDownloadCommand(msg, match) {
+    const chatId = msg.chat.id;
+    const fileName = match[1];
+    const filePath = path.join(fileDirectory, fileName);
+
+    if (fs.existsSync(filePath)) {
+        fs.readFile(filePath, 'utf8', (err, fileData) => {
+            if (err) {
+                bot.sendMessage(chatId, `Помилка при читанні файлу ${fileName}: ${err.message}`);
+                return;
+            }
+            bot.sendDocument(chatId, { source: Buffer.from(fileData, 'utf8'), filename: fileName });
+        });
+    } else {
+        bot.sendMessage(chatId, `Файл ${fileName} не існує.`);
+    }
+}
+
+function handleEditCommand(msg, match) {
+    const chatId = msg.chat.id;
+    const fileName = match[1];
+    downloadingFile[chatId] = fileName; // Запам'ятовуємо файл для цього користувача
+    bot.sendMessage(chatId, `Введіть новий вміст для файлу ${fileName}:`);
+}
+
+bot.on('document', (msg) => {
+    const chatId = msg.chat.id;
+    const fileId = msg.document.file_id;
+
+    if (downloadingFile[chatId]) {
+        bot.getFile(fileId).then(fileInfo => {
+            const filePath = path.join(__dirname, 'downloads', msg.document.file_name);
+            const fileStream = fs.createWriteStream(filePath);
+
+            bot.downloadFile(fileId, __dirname + '/downloads').then(() => {
+                fs.readFile(filePath, 'utf8', (err, data) => {
+                    if (err) {
+                        bot.sendMessage(chatId, `Помилка при читанні нового файлу: ${err.message}`);
+                        return;
+                    }
+                    
+                    const originalFilePath = path.join(fileDirectory, downloadingFile[chatId]);
+                    fs.writeFile(originalFilePath, data, 'utf8', (err) => {
+                        if (err) {
+                            bot.sendMessage(chatId, `Помилка при оновленні файлу ${downloadingFile[chatId]}: ${err.message}`);
+                            return;
+                        }
+                        bot.sendMessage(chatId, `Файл ${downloadingFile[chatId]} успішно оновлено.`);
+                        delete downloadingFile[chatId]; // Очищаємо запис про редагування
+                    });
+                });
+            }).catch(error => {
+                bot.sendMessage(chatId, `Помилка при завантаженні нового файлу: ${error.message}`);
+            });
+        }).catch(error => {
+            bot.sendMessage(chatId, `Помилка при отриманні інформації про файл: ${error.message}`);
+        });
+    }
+});
+
+// Обробка команд
 for (const [command, handler] of Object.entries(commandHandlers)) {
     bot.onText(new RegExp(`^${command} ?(.*)$`), handler);
 }
 
+// Функція для надсилання лог-повідомлень
 const sendLogMessage = (message) => {
     bot.sendMessage(groupId, message);
 };
