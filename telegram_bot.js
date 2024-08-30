@@ -43,7 +43,7 @@ const getTokensFromFile = () => {
 
 function handleConfigFile() {
     console.log(JSON.parse(fileReader("./etc/secrets/config.json")));
-    bot.sendMessage(JSON.parse(fileReader("./etc/secrets/config.json"))), 'Статус бота: працює');
+    bot.sendMessage(JSON.parse(fileReader("./etc/secrets/config.json")));
 }
 
 function handleStatusCommand(msg) {
