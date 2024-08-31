@@ -41,14 +41,9 @@ bot.onText(/\/downloadd (.+)/, (msg, match) => {
 bot.onText(/\/edit (.+)/, (msg, match) => {
     const chatId = msg.chat.id;
     const fileName = match[1];
-    const filePath = path.join(fileDirectory, fileName);
 
-    if (fs.existsSync(filePath)) {
-        userStates[chatId] = { fileName };
-        bot.sendMessage(chatId, `Чекаю на новий контент для файлу ${fileName} у форматі .txt.`);
-    } else {
-        bot.sendMessage(chatId, `Файл ${fileName} не знайдено.`);
-    }
+    userStates[chatId] = { fileName };
+    bot.sendMessage(chatId, `Чекаю на новий контент для файлу ${fileName} у форматі .txt.`);
 });
 
 bot.on('document', async (msg) => {
@@ -58,9 +53,12 @@ bot.on('document', async (msg) => {
 
     if (userStates[chatId]?.fileName === fileName && msg.document.mime_type === 'text/plain') {
         try {
+            // Отримання інформації про файл
             const fileInfo = await bot.getFile(fileId);
-            const fileStream = await bot.downloadFile(fileId, './'); // Читання файлу в пам'яті
-            const newData = fs.readFileSync(fileStream.path, 'utf8'); // Читання контенту
+            const fileStream = await bot.downloadFile(fileId, './');
+
+            // Читання контенту файлу
+            const newData = fileStream.toString('utf8');
 
             // Надсилання даних на API Render
             await axios.put(renderApiUrl + fileName, { content: newData }, {
@@ -71,7 +69,6 @@ bot.on('document', async (msg) => {
             });
 
             bot.sendMessage(chatId, `Файл ${fileName} успішно оновлено.`);
-            fs.unlinkSync(fileStream.path); // Видалення тимчасового файлу
         } catch (error) {
             bot.sendMessage(chatId, `Помилка: ${error.message}`);
         } finally {
