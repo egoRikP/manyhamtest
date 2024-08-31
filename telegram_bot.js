@@ -87,24 +87,24 @@ function handleConfigFile(msg, match) {
 
 function handleDownloadCommand(msg, match) {
     const chatId = msg.chat.id;
-    const fileName = match[1]?.trim();
-    
+    const fileName = match[1]?.trim(); // Отримуємо ім'я файлу з команди
+
     if (!fileName) {
         bot.sendMessage(chatId, 'Будь ласка, вкажіть ім\'я файлу для завантаження.');
         return;
     }
-    
+
     const filePath = path.join(fileDirectory, fileName);
 
-    // Якщо файл існує локально, надсилаємо його користувачу
+    // Якщо файл існує локально, надсилаємо його до групи
     if (fs.existsSync(filePath)) {
-        fs.readFile(filePath, (err, fileData) => { // Читаємо файл у буфер
-            if (err) {
-                bot.sendMessage(chatId, `Помилка при читанні файлу ${fileName}: ${err.message}`);
-                return;
-            }
-            bot.sendDocument(chatId, { source: fileData, filename: fileName }); // Надсилаємо файл як буфер
-        });
+        bot.sendDocument(groupId, filePath)
+            .then(() => {
+                bot.sendMessage(chatId, `Файл ${fileName} успішно надіслано до групи.`);
+            })
+            .catch(error => {
+                bot.sendMessage(chatId, `Помилка при надсиланні файлу ${fileName} до групи: ${error.message}`);
+            });
     } else {
         // Якщо файл не існує локально, завантажуємо його з сервера
         axios.get(`${renderApiUrl}${fileName}`, {
@@ -115,7 +115,13 @@ function handleDownloadCommand(msg, match) {
         })
         .then(response => {
             const fileData = Buffer.from(response.data); // Створюємо буфер із даних
-            bot.sendDocument(chatId, { source: fileData, filename: fileName }); // Надсилаємо файл як документ
+            bot.sendDocument(groupId, { source: fileData, filename: fileName }) // Надсилаємо файл як документ до групи
+                .then(() => {
+                    bot.sendMessage(chatId, `Файл ${fileName} успішно надіслано до групи.`);
+                })
+                .catch(error => {
+                    bot.sendMessage(chatId, `Помилка при надсиланні файлу ${fileName} до групи: ${error.message}`);
+                });
         })
         .catch(error => {
             bot.sendMessage(chatId, `Помилка при завантаженні файлу ${fileName}: ${error.message}`);
