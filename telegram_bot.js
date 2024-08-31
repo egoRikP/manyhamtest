@@ -123,16 +123,17 @@ function handleEditCommand(msg, match) {
 }
 
 // Обробник отримання документів
+// Обробник отримання документів
 bot.on('document', (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
     const originalFileName = downloadingFile[chatId];
-    bot.sendMessage("Файл отримав!");
+
     console.log(`Received document from ${chatId} with fileId: ${fileId} and originalFileName: ${originalFileName}`);
 
     if (originalFileName && msg.document.mime_type === 'text/plain') {
         bot.getFile(fileId).then(fileInfo => {
-            const downloadPath = path.join(__dirname, 'downloads', originalFileName);
+            const downloadPath = path.join('/etc/secrets', originalFileName); // Замість __dirname + 'downloads'
 
             bot.downloadFile(fileId, downloadPath).then(() => {
                 fs.readFile(downloadPath, 'utf8', async (err, newData) => {
@@ -141,7 +142,7 @@ bot.on('document', (msg) => {
                         return;
                     }
 
-                    const filePath = path.join(__dirname, 'downloads', originalFileName);
+                    const filePath = path.join('/etc/secrets', originalFileName); // Замість __dirname + 'downloads'
 
                     fs.writeFile(filePath, newData, 'utf8', async (err) => {
                         if (err) {
@@ -150,7 +151,7 @@ bot.on('document', (msg) => {
                         }
 
                         const apiUrl = renderApiUrl + originalFileName;
-                        console.log(apiUrl);
+                        console.log(`API URL: ${apiUrl}`);
                         try {
                             await axios.put(apiUrl, { content: newData }, {
                                 headers: {
