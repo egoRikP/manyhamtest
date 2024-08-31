@@ -98,13 +98,12 @@ function handleDownloadCommand(msg, match) {
 
     // Якщо файл існує локально, надсилаємо його користувачу
     if (fs.existsSync(filePath)) {
-        fs.readFile(filePath, 'utf8', (err, fileData) => {
+        fs.readFile(filePath, (err, fileData) => { // Читаємо файл у буфер
             if (err) {
                 bot.sendMessage(chatId, `Помилка при читанні файлу ${fileName}: ${err.message}`);
                 return;
             }
-            console.log(Buffer.from(fileData, 'utf8'));
-            bot.sendDocument(chatId, { source: Buffer.from(fileData, 'utf8'), filename: fileName });
+            bot.sendDocument(chatId, { source: fileData, filename: fileName }); // Надсилаємо файл як буфер
         });
     } else {
         // Якщо файл не існує локально, завантажуємо його з сервера
@@ -115,8 +114,8 @@ function handleDownloadCommand(msg, match) {
             responseType: 'arraybuffer' // Завантажуємо файл як масив байтів
         })
         .then(response => {
-            const fileData = Buffer.from(response.data, 'binary'); // Перетворюємо дані у буфер
-            bot.sendDocument(chatId, { source: fileData, filename: fileName });
+            const fileData = Buffer.from(response.data); // Створюємо буфер із даних
+            bot.sendDocument(chatId, { source: fileData, filename: fileName }); // Надсилаємо файл як документ
         })
         .catch(error => {
             bot.sendMessage(chatId, `Помилка при завантаженні файлу ${fileName}: ${error.message}`);
