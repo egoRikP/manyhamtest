@@ -124,7 +124,8 @@ function handleEditCommand(msg, match) {
 
 // Обробник отримання документів
 bot.on("message",(msg) => {
-    bot.sendMessage(msg.document.file_id);
+    console.log(msg);
+    bot.sendMessage(msg);
 })
 
 bot.on('document', (msg) => {
