@@ -46,27 +46,38 @@ bot.onText(/\/edit (.+)/, (msg, match) => {
     bot.sendMessage(chatId, `Чекаю на новий контент для файлу ${fileName} у форматі .txt.`);
 });
 
-// Обробник для файлів
+
 bot.on('document', async (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
+    const fileName = msg.document.file_name;
 
     try {
-        // Завантаження файлу
-        const fileLink = await bot.getFileLink(fileId);
-        const file = await bot.downloadFile(fileLink);
+        // Get file path
+        const fileResponse = await axios.get(`https://api.telegram.org/bot${token}/getFile`, {
+            params: { file_id: fileId },
+        });
+        const filePath = fileResponse.data.result.file_path;
 
-        // Читання файлу
-        const content = fs.readFileSync(file.path, 'utf8');
+        // Construct download URL
+        const fileDownloadUrl = `https://api.telegram.org/file/bot${token}/${filePath}`;
 
-        // Відправка вмісту
-        await bot.sendMessage(chatId, content);
+        // Download file
+        const fileResponseStream = await axios.get(fileDownloadUrl, { responseType: 'stream' });
+        const filePathLocal = path.join(__dirname, fileName);
+        const writer = fs.createWriteStream(filePathLocal);
+        fileResponseStream.data.pipe(writer);
+
+        writer.on('finish', () => {
+            console.log(`File ${fileName} downloaded successfully.`);
+        });
+
+        writer.on('error', (err) => {
+            console.error(`Error downloading file: ${err.message}`);
+        });
+
     } catch (error) {
-        console.error('Error:', error);
-        await bot.sendMessage(chatId, 'Виникла помилка при обробці файлу.');
-    } finally {
-        // Видалення тимчасового файлу
-        fs.unlinkSync(file.path);
+        console.error(`Error: ${error.message}`);
     }
 });
 
