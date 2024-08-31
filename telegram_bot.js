@@ -13,6 +13,7 @@ const renderApiUrl = 'https://api.render.com/v1/services/srv-cpnv6f88fa8c73b81s6
 const bearerToken = 'rnd_04BLXty0HtthUCkb8AzBXVda5zSY'; // Bearer Token
 
 let downloadingFile = {}; // Зберігає інформацію про файл, який завантажується
+let userStates = {};
 
 // Функції для обробки команд
 const commandHandlers = {
@@ -196,6 +197,59 @@ for (const [command, handler] of Object.entries(commandHandlers)) {
 const sendLogMessage = (message) => {
     bot.sendMessage(groupId, message);
 };
+
+
+// Обробник команд
+bot.onText(/\/edit (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const filename = match[1];
+
+  // Оновлюємо стан користувача
+  userStates[chatId] = {
+    expectingFile: true,
+    filename: filename
+  };
+
+  bot.sendMessage(chatId, `Чекаю на текстовий файл з ім'ям ${filename}.`);
+});
+
+// Обробник отримання документів (файлів)
+bot.on('document', (msg) => {
+  const chatId = msg.chat.id;
+  const fileId = msg.document.file_id;
+  const fileName = msg.document.file_name;
+
+  // Перевіряємо, чи користувач знаходиться в режимі очікування файлу
+  if (userStates[chatId] && userStates[chatId].expectingFile) {
+    const expectedFileName = userStates[chatId].filename;
+    
+    // Перевіряємо ім'я файлу
+    if (fileName === expectedFileName) {
+      bot.downloadFile(fileId, './').then((filePath) => {
+        // Читаємо вміст файлу
+        fs.readFile(filePath, 'utf8', (err, data) => {
+          if (err) {
+            bot.sendMessage(chatId, 'Помилка при читанні файлу.');
+            console.error(err);
+          } else {
+            // Відправляємо вміст файлу назад користувачу
+            bot.sendMessage(chatId, data);
+          }
+        });
+      }).catch((err) => {
+        bot.sendMessage(chatId, 'Помилка при завантаженні файлу.');
+        console.error(err);
+      });
+
+      // Скидаємо стан користувача
+      userStates[chatId].expectingFile = false;
+    } else {
+      bot.sendMessage(chatId, `Невірне ім'я файлу. Очікував ${expectedFileName}.`);
+    }
+  } else {
+    bot.sendMessage(chatId, 'Немає активного запиту на файл. Використовуйте команду /edit "filename".');
+  }
+});
 
 module.exports = {
     sendLogMessage
