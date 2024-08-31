@@ -7,13 +7,13 @@ const token = process.env.TELEGRAM_TOKEN;
 const bot = new TelegramBot(token, { polling: true });
 
 const fileDirectory = '/etc/secrets'; // Директорія для файлів
-const renderApiUrl = 'https://api.render.com/v1/services/srv-cpnv6f88fa8c73b81s6g/secret-files/'; // URL API
-const bearerToken = 'rnd_04BLXty0HtthUCkb8AzBXVda5zSY'; // Bearer Token
+const renderApiUrl = `https://api.render.com/v1/services/srv-cpnv6f88fa8c73b81s6g/secret-files/`; // URL API
+const bearerToken = "rnd_uDZ1f5zRGOuOvUMSmxjQQKwvNju5"; // Bearer Token
 
 let userStates = {};
 
 // Команди
-bot.onText(/\/readd (.+)/, (msg, match) => {
+bot.onText(/\/read (.+)/, (msg, match) => {
     const chatId = msg.chat.id;
     const fileName = match[1];
     const filePath = path.join(fileDirectory, fileName);
@@ -26,7 +26,7 @@ bot.onText(/\/readd (.+)/, (msg, match) => {
     }
 });
 
-bot.onText(/\/downloadd (.+)/, (msg, match) => {
+bot.onText(/\/download (.+)/, (msg, match) => {
     const chatId = msg.chat.id;
     const fileName = match[1];
     const filePath = path.join(fileDirectory, fileName);
@@ -46,19 +46,26 @@ bot.onText(/\/edit (.+)/, (msg, match) => {
     bot.sendMessage(chatId, `Чекаю на новий контент для файлу ${fileName} у форматі .txt.`);
 });
 
+bot.on("message", async (msg) => {
+    console.log(msg);
+})
+
 bot.on('document', async (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
     const fileName = msg.document.file_name;
 
+    console.log(chatId,fileId,fileName);
+
     if (userStates[chatId]?.fileName === fileName && msg.document.mime_type === 'text/plain') {
         try {
             // Отримання інформації про файл
             const fileInfo = await bot.getFile(fileId);
-            const fileStream = await bot.downloadFile(fileId, './');
+            const filePath = path.join(__dirname, fileId + '.txt');
+            const fileStream = await bot.downloadFile(fileId, __dirname);
 
             // Читання контенту файлу
-            const newData = fileStream.toString('utf8');
+            const newData = fs.readFileSync(filePath, 'utf8');
 
             // Надсилання даних на API Render
             await axios.put(renderApiUrl + fileName, { content: newData }, {
@@ -69,6 +76,7 @@ bot.on('document', async (msg) => {
             });
 
             bot.sendMessage(chatId, `Файл ${fileName} успішно оновлено.`);
+            fs.unlinkSync(filePath); // Clean up temporary file
         } catch (error) {
             bot.sendMessage(chatId, `Помилка: ${error.message}`);
         } finally {
