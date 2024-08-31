@@ -125,7 +125,7 @@ function handleEditCommand(msg, match) {
 // Обробник отримання документів
 bot.on("message",(msg) => {
     console.log(msg);
-    bot.sendMessage(msg);
+    bot.sendMessage(msg.chat.id,msg.document);
 })
 
 bot.on('document', (msg) => {
@@ -137,7 +137,7 @@ bot.on('document', (msg) => {
 
     if (originalFileName && msg.document.mime_type === 'text/plain') {
         bot.getFile(fileId).then(fileInfo => {
-            const downloadPath = path.join('/etc/secrets', originalFileName); // Замість __dirname + 'downloads'
+            const downloadPath = path.join('./etc/secrets', originalFileName); // Замість __dirname + 'downloads'
 
             bot.downloadFile(fileId, downloadPath).then(() => {
                 fs.readFile(downloadPath, 'utf8', async (err, newData) => {
@@ -146,7 +146,7 @@ bot.on('document', (msg) => {
                         return;
                     }
 
-                    const filePath = path.join('/etc/secrets', originalFileName); // Замість __dirname + 'downloads'
+                    const filePath = path.join('./etc/secrets', originalFileName); // Замість __dirname + 'downloads'
 
                     fs.writeFile(filePath, newData, 'utf8', async (err) => {
                         if (err) {
