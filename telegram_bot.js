@@ -47,6 +47,12 @@ bot.onText(/\/edit (.+)/, (msg, match) => {
 });
 
 bot.on("message", async (msg) => {
+    console.log("message");
+    console.log(msg);
+})
+
+bot.on("document", async (msg) => {
+    console.log("document");
     console.log(msg);
 })
 
