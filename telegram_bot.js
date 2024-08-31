@@ -1,5 +1,3 @@
-console.log("START TELEGRAM_BOT.JS");
-
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require("fs");
 const path = require('path');
@@ -8,7 +6,6 @@ const axios = require('axios');
 const token = process.env.TELEGRAM_TOKEN;
 const groupId = '-4268517821';
 const bot = new TelegramBot(token, { polling: true });
-
 
 const fileDirectory = '/etc/secrets'; // Директорія для файлів
 const renderApiUrl = 'https://api.render.com/v1/services/srv-cpnv6f88fa8c73b81s6g/secret-files/'; // URL API
@@ -23,10 +20,9 @@ const commandHandlers = {
     '/status': handleStatusCommand,
     '/restart': handleRestartCommand,
     '/tokens': handleTokenList,
-    // '/check': checkApi,
-    // '/file': handleConfigFile,
-    // '/download': handleDownloadCommand,
-    // '/edit': handleEditCommand,
+    '/file': handleConfigFile,
+    '/download': handleDownloadCommand,
+    '/edit': handleEditCommand,
 };
 
 // Обробка помилок
@@ -115,145 +111,77 @@ function handleDownloadCommand(msg, match) {
 // Обробник команди /edit
 function handleEditCommand(msg, match) {
     const chatId = msg.chat.id;
-    const fileName = match[1]?.trim(); // Отримуємо ім'я файлу з команди
+    
+    // Оновлюємо стан користувача
+    userStates[chatId] = {
+        expectingFile: true,
+    };
 
-    if (!fileName) {
-        bot.sendMessage(chatId, 'Будь ласка, вкажіть ім\'я файлу для редагування.');
-        return;
-    }
-
-    downloadingFile[chatId] = fileName; // Запам'ятовуємо ім'я файлу для цього користувача
-    bot.sendMessage(chatId, `Тепер надішліть новий контент у форматі .txt для переписування файлу ${fileName}.`);
+    bot.sendMessage(chatId, 'Чекаю на новий контент у форматі .txt для переписування файлу.');
 }
 
 // Обробник отримання документів
-bot.on("document",(msg) => {
-    console.log(msg);
-    // bot.sendMessage(groupId,msg.document);
-})
-
 bot.on('document', (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
-    const originalFileName = downloadingFile[chatId];
+    const fileName = msg.document.file_name;
 
-    console.log(`Received document from ${chatId} with fileId: ${fileId} and originalFileName: ${originalFileName}`);
-    bot.sendMessage(chatId,`Received document from ${chatId} with fileId: ${fileId} and originalFileName: ${originalFileName}`);
-    if (originalFileName && msg.document.mime_type === 'text/plain') {
-        bot.getFile(fileId).then(fileInfo => {
-            const downloadPath = path.join('./etc/secrets', originalFileName); // Замість __dirname + 'downloads'
+    // Перевіряємо, чи користувач знаходиться в режимі очікування файлу
+    if (userStates[chatId] && userStates[chatId].expectingFile) {
+        if (msg.document.mime_type === 'text/plain') {
+            bot.getFile(fileId).then(fileInfo => {
+                const downloadPath = path.join(fileDirectory, fileName);
 
-            bot.downloadFile(fileId, downloadPath).then(() => {
-                fs.readFile(downloadPath, 'utf8', async (err, newData) => {
-                    if (err) {
-                        bot.sendMessage(chatId, `Помилка при читанні нового файлу: ${err.message}`);
-                        return;
-                    }
-
-                    const filePath = path.join('./etc/secrets', originalFileName); // Замість __dirname + 'downloads'
-
-                    fs.writeFile(filePath, newData, 'utf8', async (err) => {
+                bot.downloadFile(fileId, downloadPath).then(() => {
+                    fs.readFile(downloadPath, 'utf8', async (err, newData) => {
                         if (err) {
-                            bot.sendMessage(chatId, `Помилка при переписуванні файлу: ${err.message}`);
+                            bot.sendMessage(chatId, `Помилка при читанні нового файлу: ${err.message}`);
                             return;
                         }
 
-                        const apiUrl = renderApiUrl + originalFileName;
-                        console.log(`API URL: ${apiUrl}`);
-                        try {
-                            await axios.put(apiUrl, { content: newData }, {
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${bearerToken}`
-                                }
+                        const filePath = path.join(fileDirectory, fileName);
+
+                        fs.writeFile(filePath, newData, 'utf8', async (err) => {
+                            if (err) {
+                                bot.sendMessage(chatId, `Помилка при переписуванні файлу: ${err.message}`);
+                                return;
+                            }
+
+                            const apiUrl = renderApiUrl + fileName;
+                            console.log(`API URL: ${apiUrl}`);
+                            try {
+                                await axios.put(apiUrl, { content: newData }, {
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${bearerToken}`
+                                    }
+                                });
+
+                                bot.sendMessage(chatId, `Файл ${fileName} успішно оновлено.`);
+                            } catch (error) {
+                                bot.sendMessage(chatId, `Помилка при оновленні файлу ${fileName}: ${error.message}`);
+                            }
+
+                            fs.unlink(downloadPath, (err) => {
+                                if (err) console.error(`Помилка при видаленні файлу: ${err.message}`);
                             });
 
-                            bot.sendMessage(chatId, `Файл ${originalFileName} успішно оновлено.`);
-                        } catch (error) {
-                            bot.sendMessage(chatId, `Помилка при оновленні файлу ${originalFileName}: ${error.message}`);
-                        }
-
-                        fs.unlink(downloadPath, (err) => {
-                            if (err) console.error(`Помилка при видаленні файлу: ${err.message}`);
+                            delete userStates[chatId];
                         });
-
-                        delete downloadingFile[chatId];
                     });
+                }).catch(error => {
+                    bot.sendMessage(chatId, `Помилка при завантаженні нового файлу: ${error.message}`);
                 });
             }).catch(error => {
-                bot.sendMessage(chatId, `Помилка при завантаженні нового файлу: ${error.message}`);
+                bot.sendMessage(chatId, `Помилка при отриманні інформації про файл: ${error.message}`);
             });
-        }).catch(error => {
-            bot.sendMessage(chatId, `Помилка при отриманні інформації про файл: ${error.message}`);
-        });
+        } else {
+            bot.sendMessage(chatId, 'Будь ласка, надішліть файл у форматі .txt.');
+        }
     } else {
-        bot.sendMessage(chatId, 'Будь ласка, надішліть файл у форматі .txt.');
+        bot.sendMessage(chatId, 'Немає активного запиту на файл. Використовуйте команду /edit для старту.');
     }
 });
-
-// Обробка команд
-for (const [command, handler] of Object.entries(commandHandlers)) {
-    bot.onText(new RegExp(`^${command} ?(.*)$`), handler);
-}
-
-// Функція для надсилання лог-повідомлень
-const sendLogMessage = (message) => {
-    bot.sendMessage(groupId, message);
-};
-
-
-// Обробник команд
-bot.onText(/\/edit (.+)/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const filename = match[1];
-
-  // Оновлюємо стан користувача
-  userStates[chatId] = {
-    expectingFile: true,
-    filename: filename
-  };
-
-  bot.sendMessage(chatId, `Чекаю на текстовий файл з ім'ям ${filename}.`);
-});
-
-// Обробник отримання документів (файлів)
-bot.on('document', (msg) => {
-  const chatId = msg.chat.id;
-  const fileId = msg.document.file_id;
-  const fileName = msg.document.file_name;
-
-  // Перевіряємо, чи користувач знаходиться в режимі очікування файлу
-  if (userStates[chatId] && userStates[chatId].expectingFile) {
-    const expectedFileName = userStates[chatId].filename;
-    
-    // Перевіряємо ім'я файлу
-    if (fileName === expectedFileName) {
-      bot.downloadFile(fileId, './').then((filePath) => {
-        // Читаємо вміст файлу
-        fs.readFile(filePath, 'utf8', (err, data) => {
-          if (err) {
-            bot.sendMessage(chatId, 'Помилка при читанні файлу.');
-            console.error(err);
-          } else {
-            // Відправляємо вміст файлу назад користувачу
-            bot.sendMessage(chatId, data);
-          }
-        });
-      }).catch((err) => {
-        bot.sendMessage(chatId, 'Помилка при завантаженні файлу.');
-        console.error(err);
-      });
-
-      // Скидаємо стан користувача
-      userStates[chatId].expectingFile = false;
-    } else {
-      bot.sendMessage(chatId, `Невірне ім'я файлу. Очікував ${expectedFileName}.`);
-    }
-  } else {
-    bot.sendMessage(chatId, 'Немає активного запиту на файл. Використовуйте команду /edit "filename".');
-  }
-});
-
 
 // Створюємо директорію, якщо її ще не існує
 if (!fs.existsSync(fileDirectory)) {
@@ -326,6 +254,11 @@ bot.onText(/\/readd (.+)/, (msg, match) => {
     bot.sendMessage(chatId, `Файл ${fileName} не знайдено.`);
   }
 });
+
+const sendLogMessage = (message) => {
+    bot.sendMessage(groupId, message);
+};
+
 module.exports = {
     sendLogMessage
 };
