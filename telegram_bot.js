@@ -97,7 +97,7 @@ function handleDownloadCommand(msg, match) {
     const filePath = path.join(fileDirectory, fileName);
 
     // Якщо файл існує локально, надсилаємо його до групи
-    if (fs.existsSync(filePath)) {
+    // if (fs.existsSync(filePath)) {
         bot.sendDocument(groupId, filePath)
             .then(() => {
                 bot.sendMessage(chatId, `Файл ${fileName} успішно надіслано до групи.`);
@@ -105,28 +105,7 @@ function handleDownloadCommand(msg, match) {
             .catch(error => {
                 bot.sendMessage(chatId, `Помилка при надсиланні файлу ${fileName} до групи: ${error.message}`);
             });
-    } else {
-        // Якщо файл не існує локально, завантажуємо його з сервера
-        axios.get(`${renderApiUrl}${fileName}`, {
-            headers: {
-                'Authorization': `Bearer ${bearerToken}`
-            },
-            responseType: 'arraybuffer' // Завантажуємо файл як масив байтів
-        })
-        .then(response => {
-            const fileData = Buffer.from(response.data); // Створюємо буфер із даних
-            bot.sendDocument(groupId, { source: fileData, filename: fileName }) // Надсилаємо файл як документ до групи
-                .then(() => {
-                    bot.sendMessage(chatId, `Файл ${fileName} успішно надіслано до групи.`);
-                })
-                .catch(error => {
-                    bot.sendMessage(chatId, `Помилка при надсиланні файлу ${fileName} до групи: ${error.message}`);
-                });
-        })
-        .catch(error => {
-            bot.sendMessage(chatId, `Помилка при завантаженні файлу ${fileName}: ${error.message}`);
-        });
-    }
+    // }
 }
 
 function handleEditCommand(msg, match) {
