@@ -8,8 +8,11 @@ const axios = require('axios');
 const token = process.env.TELEGRAM_TOKEN;
 const groupId = '-4268517821';
 const bot = new TelegramBot(token, { polling: true });
+
+
 const fileDirectory = '/etc/secrets'; // Директорія для файлів
 const renderApiUrl = 'https://api.render.com/v1/services/srv-cpnv6f88fa8c73b81s6g/secret-files/'; // URL API
+const restartApiUrl = 'https://api.render.com/v1/services/srv-cpnv6f88fa8c73b81s6g/restart'; // URL для перезавантаження сервера
 const bearerToken = 'rnd_04BLXty0HtthUCkb8AzBXVda5zSY'; // Bearer Token
 
 let downloadingFile = {}; // Зберігає інформацію про файл, який завантажується
@@ -258,7 +261,7 @@ if (!fs.existsSync(fileDirectory)) {
 }
 
 // Обробка команд
-bot.onText(/\/edit (.+)/, (msg, match) => {
+bot.onText(/\/editt (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const fileName = match[1];
   const filePath = path.join(fileDirectory, fileName);
@@ -267,8 +270,32 @@ bot.onText(/\/edit (.+)/, (msg, match) => {
     bot.sendMessage(chatId, `Відправте новий контент для файлу ${fileName}`);
     bot.once('message', (msg) => {
       const newContent = msg.text;
-      fs.writeFileSync(filePath, newContent);
-      bot.sendMessage(chatId, `Файл ${fileName} був успішно оновлений.`);
+
+      // Оновлення файлу через PUT-запит до API
+      axios.put(`${renderApiUrl}${fileName}`, { content: newContent }, {
+        headers: {
+          'Authorization': `Bearer ${bearerToken}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        bot.sendMessage(chatId, `Файл ${fileName} був успішно оновлений.`);
+
+        // Перезавантаження сервера через POST-запит
+        return axios.post(restartApiUrl, {}, {
+          headers: {
+            'Authorization': `Bearer ${bearerToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      })
+      .then(response => {
+        bot.sendMessage(chatId, 'Сервер успішно перезавантажений.');
+      })
+      .catch(error => {
+        bot.sendMessage(chatId, `Помилка при оновленні файлу ${fileName} або перезавантаженні сервера.`);
+        console.error(error);
+      });
     });
   } else {
     bot.sendMessage(chatId, `Файл ${fileName} не знайдено.`);
@@ -287,7 +314,7 @@ bot.onText(/\/downloadd (.+)/, (msg, match) => {
   }
 });
 
-bot.onText(/\/read (.+)/, (msg, match) => {
+bot.onText(/\/readd (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const fileName = match[1];
   const filePath = path.join(fileDirectory, fileName);
@@ -299,7 +326,6 @@ bot.onText(/\/read (.+)/, (msg, match) => {
     bot.sendMessage(chatId, `Файл ${fileName} не знайдено.`);
   }
 });
-
 module.exports = {
     sendLogMessage
 };
