@@ -208,17 +208,6 @@ bot.onText(/\/editt (.+)/, (msg, match) => {
       })
       .then(response => {
         bot.sendMessage(chatId, `Файл ${fileName} був успішно оновлений.`);
-
-        // Перезавантаження сервера через POST-запит
-        return axios.post(restartApiUrl, {}, {
-          headers: {
-            'Authorization': `Bearer ${bearerToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-      })
-      .then(response => {
-        bot.sendMessage(chatId, 'Сервер успішно перезавантажений.');
       })
       .catch(error => {
         bot.sendMessage(chatId, `Помилка при оновленні файлу ${fileName} або перезавантаженні сервера.`);
