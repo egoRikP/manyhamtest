@@ -87,9 +87,16 @@ function handleConfigFile(msg, match) {
 
 function handleDownloadCommand(msg, match) {
     const chatId = msg.chat.id;
-    const fileName = match[1];
+    const fileName = match[1]?.trim();
+    
+    if (!fileName) {
+        bot.sendMessage(chatId, 'Будь ласка, вкажіть ім\'я файлу для завантаження.');
+        return;
+    }
+    
     const filePath = path.join(fileDirectory, fileName);
 
+    // Якщо файл існує локально, надсилаємо його користувачу
     if (fs.existsSync(filePath)) {
         fs.readFile(filePath, 'utf8', (err, fileData) => {
             if (err) {
@@ -99,7 +106,20 @@ function handleDownloadCommand(msg, match) {
             bot.sendDocument(chatId, { source: Buffer.from(fileData, 'utf8'), filename: fileName });
         });
     } else {
-        bot.sendMessage(chatId, `Файл ${fileName} не існує.`);
+        // Якщо файл не існує локально, завантажуємо його з сервера
+        axios.get(`${renderApiUrl}${fileName}`, {
+            headers: {
+                'Authorization': `Bearer ${bearerToken}`
+            },
+            responseType: 'arraybuffer' // Завантажуємо файл як масив байтів
+        })
+        .then(response => {
+            const fileData = Buffer.from(response.data, 'binary'); // Перетворюємо дані у буфер
+            bot.sendDocument(chatId, { source: fileData, filename: fileName });
+        })
+        .catch(error => {
+            bot.sendMessage(chatId, `Помилка при завантаженні файлу ${fileName}: ${error.message}`);
+        });
     }
 }
 
