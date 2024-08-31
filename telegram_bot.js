@@ -251,6 +251,55 @@ bot.on('document', (msg) => {
   }
 });
 
+
+// Створюємо директорію, якщо її ще не існує
+if (!fs.existsSync(fileDirectory)) {
+  fs.mkdirSync(fileDirectory, { recursive: true });
+}
+
+// Обробка команд
+bot.onText(/\/edit (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const fileName = match[1];
+  const filePath = path.join(fileDirectory, fileName);
+
+  if (fs.existsSync(filePath)) {
+    bot.sendMessage(chatId, `Відправте новий контент для файлу ${fileName}`);
+    bot.once('message', (msg) => {
+      const newContent = msg.text;
+      fs.writeFileSync(filePath, newContent);
+      bot.sendMessage(chatId, `Файл ${fileName} був успішно оновлений.`);
+    });
+  } else {
+    bot.sendMessage(chatId, `Файл ${fileName} не знайдено.`);
+  }
+});
+
+bot.onText(/\/downloadd (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const fileName = match[1];
+  const filePath = path.join(fileDirectory, fileName);
+
+  if (fs.existsSync(filePath)) {
+    bot.sendDocument(chatId, filePath);
+  } else {
+    bot.sendMessage(chatId, `Файл ${fileName} не знайдено.`);
+  }
+});
+
+bot.onText(/\/read (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const fileName = match[1];
+  const filePath = path.join(fileDirectory, fileName);
+
+  if (fs.existsSync(filePath)) {
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    bot.sendMessage(chatId, `Контент файлу ${fileName}: \n${fileContent}`);
+  } else {
+    bot.sendMessage(chatId, `Файл ${fileName} не знайдено.`);
+  }
+});
+
 module.exports = {
     sendLogMessage
 };
