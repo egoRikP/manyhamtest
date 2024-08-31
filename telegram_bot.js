@@ -4,7 +4,6 @@ const path = require('path');
 const axios = require('axios');
 
 const token = process.env.TELEGRAM_TOKEN;
-const groupId = '-4268517821';
 const bot = new TelegramBot(token, { polling: true });
 
 const fileDirectory = '/etc/secrets'; // Директорія для файлів
@@ -52,56 +51,33 @@ bot.onText(/\/edit (.+)/, (msg, match) => {
     }
 });
 
-bot.on('document', (msg) => {
+bot.on('document', async (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
     const fileName = msg.document.file_name;
 
-    if (userStates[chatId] && userStates[chatId].fileName === fileName) {
-        if (msg.document.mime_type === 'text/plain') {
-            bot.getFile(fileId).then(fileInfo => {
-                const downloadPath = path.join(fileDirectory, fileName);
+    if (userStates[chatId]?.fileName === fileName && msg.document.mime_type === 'text/plain') {
+        try {
+            const fileInfo = await bot.getFile(fileId);
+            const downloadPath = path.join(fileDirectory, fileName);
+            await bot.downloadFile(fileId, downloadPath);
 
-                bot.downloadFile(fileId, downloadPath).then(() => {
-                    fs.readFile(downloadPath, 'utf8', (err, newData) => {
-                        if (err) {
-                            bot.sendMessage(chatId, `Помилка при читанні нового файлу: ${err.message}`);
-                            return;
-                        }
+            const newData = fs.readFileSync(downloadPath, 'utf8');
+            fs.writeFileSync(path.join(fileDirectory, fileName), newData, 'utf8');
 
-                        fs.writeFile(filePath, newData, 'utf8', async (err) => {
-                            if (err) {
-                                bot.sendMessage(chatId, `Помилка при переписуванні файлу: ${err.message}`);
-                                return;
-                            }
-
-                            try {
-                                await axios.put(renderApiUrl + fileName, { content: newData }, {
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': `Bearer ${bearerToken}`
-                                    }
-                                });
-                                bot.sendMessage(chatId, `Файл ${fileName} успішно оновлено.`);
-                            } catch (error) {
-                                bot.sendMessage(chatId, `Помилка при оновленні файлу ${fileName}: ${error.message}`);
-                            }
-
-                            fs.unlink(downloadPath, (err) => {
-                                if (err) console.error(`Помилка при видаленні файлу: ${err.message}`);
-                            });
-
-                            delete userStates[chatId];
-                        });
-                    });
-                }).catch(error => {
-                    bot.sendMessage(chatId, `Помилка при завантаженні нового файлу: ${error.message}`);
-                });
-            }).catch(error => {
-                bot.sendMessage(chatId, `Помилка при отриманні інформації про файл: ${error.message}`);
+            await axios.put(renderApiUrl + fileName, { content: newData }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${bearerToken}`
+                }
             });
-        } else {
-            bot.sendMessage(chatId, 'Будь ласка, надішліть файл у форматі .txt.');
+
+            bot.sendMessage(chatId, `Файл ${fileName} успішно оновлено.`);
+            fs.unlinkSync(downloadPath);
+        } catch (error) {
+            bot.sendMessage(chatId, `Помилка: ${error.message}`);
+        } finally {
+            delete userStates[chatId];
         }
     } else {
         bot.sendMessage(chatId, 'Немає активного запиту на файл. Використовуйте команду /edit для старту.');
