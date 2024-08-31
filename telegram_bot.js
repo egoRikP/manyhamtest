@@ -108,6 +108,7 @@ function handleDownloadCommand(msg, match) {
     // }
 }
 
+// Обробник команди /edit
 function handleEditCommand(msg, match) {
     const chatId = msg.chat.id;
     const fileName = match[1]?.trim(); // Отримуємо ім'я файлу з команди
@@ -118,9 +119,10 @@ function handleEditCommand(msg, match) {
     }
 
     downloadingFile[chatId] = fileName; // Запам'ятовуємо ім'я файлу для цього користувача
-    bot.sendMessage(chatId, `Надішліть новий файл у форматі .txt для заміни вмісту ${fileName}.`);
+    bot.sendMessage(chatId, `Тепер надішліть новий контент у форматі .txt для переписування файлу ${fileName}.`);
 }
 
+// Обробник отримання документів
 bot.on('document', (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
@@ -129,7 +131,7 @@ bot.on('document', (msg) => {
     if (originalFileName && msg.document.mime_type === 'text/plain') { // Перевірка, чи файл є текстовим
         // Отримуємо шлях для завантаження файлу
         bot.getFile(fileId).then(fileInfo => {
-            const downloadPath = path.join(__dirname, 'downloads', msg.document.file_name);
+            const downloadPath = path.join(__dirname, 'downloads', originalFileName);
 
             bot.downloadFile(fileId, downloadPath).then(() => {
                 // Читаємо новий файл
@@ -139,28 +141,38 @@ bot.on('document', (msg) => {
                         return;
                     }
 
-                    const apiUrl = renderApiUrl + originalFileName;
+                    // Переписуємо існуючий файл
+                    const filePath = path.join(__dirname, 'downloads', originalFileName);
 
-                    try {
-                        // Надсилаємо PUT-запит до API, щоб оновити файл на сервері
-                        await axios.put(apiUrl, { content: newData }, {
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${bearerToken}`
-                            }
+                    fs.writeFile(filePath, newData, 'utf8', async (err) => {
+                        if (err) {
+                            bot.sendMessage(chatId, `Помилка при переписуванні файлу: ${err.message}`);
+                            return;
+                        }
+
+                        const apiUrl = renderApiUrl + originalFileName;
+
+                        try {
+                            // Надсилаємо PUT-запит до API, щоб оновити файл на сервері
+                            await axios.put(apiUrl, { content: newData }, {
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${bearerToken}`
+                                }
+                            });
+
+                            bot.sendMessage(chatId, `Файл ${originalFileName} успішно оновлено.`);
+                        } catch (error) {
+                            bot.sendMessage(chatId, `Помилка при оновленні файлу ${originalFileName}: ${error.message}`);
+                        }
+
+                        // Видаляємо тимчасовий файл
+                        fs.unlink(downloadPath, (err) => {
+                            if (err) console.error(`Помилка при видаленні файлу: ${err.message}`);
                         });
 
-                        bot.sendMessage(chatId, `Файл ${originalFileName} успішно оновлено.`);
-                    } catch (error) {
-                        bot.sendMessage(chatId, `Помилка при оновленні файлу ${originalFileName}: ${error.message}`);
-                    }
-
-                    // Видаляємо тимчасовий файл
-                    fs.unlink(downloadPath, (err) => {
-                        if (err) console.error(`Помилка при видаленні файлу: ${err.message}`);
+                        delete downloadingFile[chatId]; // Очищаємо запис про редагування
                     });
-
-                    delete downloadingFile[chatId]; // Очищаємо запис про редагування
                 });
             }).catch(error => {
                 bot.sendMessage(chatId, `Помилка при завантаженні нового файлу: ${error.message}`);
