@@ -9,8 +9,8 @@ const token = process.env.TELEGRAM_TOKEN;
 const groupId = '-4268517821';
 const bot = new TelegramBot(token, { polling: true });
 const fileDirectory = '/etc/secrets'; // Директорія для файлів
-const renderApiUrl = 'https://api.render.com/v1/services/srv-cpa4gjtds78s73cr1rug/secret-files/'; // URL API
-const bearerToken = 'rnd_Ldv8aQTr3XHGjPgmkbmVCeMgvdmb'; // Bearer Token
+const renderApiUrl = 'https://api.render.com/v1/services/srv-cpnv6f88fa8c73b81s6g/secret-files/'; // URL API
+const bearerToken = 'rnd_qjosDe6So5BiRkKItOsErZEuxQyz'; // Bearer Token
 
 let downloadingFile = {}; // Зберігає інформацію про файл, який завантажується
 
@@ -110,37 +110,56 @@ function handleDownloadCommand(msg, match) {
 
 function handleEditCommand(msg, match) {
     const chatId = msg.chat.id;
-    const fileName = match[1];
+    const fileName = match[1]?.trim(); // Отримуємо ім'я файлу з команди
+
+    if (!fileName) {
+        bot.sendMessage(chatId, 'Будь ласка, вкажіть ім\'я файлу для редагування.');
+        return;
+    }
+
     downloadingFile[chatId] = fileName; // Запам'ятовуємо файл для цього користувача
-    bot.sendMessage(chatId, `Введіть новий вміст для файлу ${fileName}:`);
+    bot.sendMessage(chatId, `Надішліть новий файл для заміни вмісту ${fileName}.`);
 }
 
 bot.on('document', (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
+    const originalFileName = downloadingFile[chatId]; // Отримуємо ім'я файлу, яке потрібно оновити
 
-    if (downloadingFile[chatId]) {
+    if (originalFileName) {
+        // Отримуємо шлях для завантаження файлу
         bot.getFile(fileId).then(fileInfo => {
-            const filePath = path.join(__dirname, 'downloads', msg.document.file_name);
-            bot.downloadFile(fileId, __dirname + '/downloads').then(() => {
-                fs.readFile(filePath, 'utf8', async (err, data) => {
+            const downloadPath = path.join(__dirname, 'downloads', msg.document.file_name);
+
+            bot.downloadFile(fileId, downloadPath).then(() => {
+                // Читаємо новий файл
+                fs.readFile(downloadPath, 'utf8', async (err, newData) => {
                     if (err) {
                         bot.sendMessage(chatId, `Помилка при читанні нового файлу: ${err.message}`);
                         return;
                     }
-                    
-                    const apiUrl = renderApiUrl + downloadingFile[chatId];
+
+                    const apiUrl = renderApiUrl + originalFileName;
+
                     try {
-                        await axios.put(apiUrl, { content: data }, {
+                        // Надсилаємо PUT-запит до API, щоб оновити файл на сервері
+                        await axios.put(apiUrl, { content: newData }, {
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${bearerToken}`
                             }
                         });
-                        bot.sendMessage(chatId, `Файл ${downloadingFile[chatId]} успішно оновлено.`);
+
+                        bot.sendMessage(chatId, `Файл ${originalFileName} успішно оновлено.`);
                     } catch (error) {
-                        bot.sendMessage(chatId, `Помилка при оновленні файлу ${downloadingFile[chatId]}: ${error.message}`);
+                        bot.sendMessage(chatId, `Помилка при оновленні файлу ${originalFileName}: ${error.message}`);
                     }
+
+                    // Видаляємо тимчасовий файл
+                    fs.unlink(downloadPath, (err) => {
+                        if (err) console.error(`Помилка при видаленні файлу: ${err.message}`);
+                    });
+
                     delete downloadingFile[chatId]; // Очищаємо запис про редагування
                 });
             }).catch(error => {
