@@ -24,9 +24,9 @@ const commandHandlers = {
     '/restart': handleRestartCommand,
     '/tokens': handleTokenList,
     // '/check': checkApi,
-    '/file': handleConfigFile,
-    '/download': handleDownloadCommand,
-    '/edit': handleEditCommand,
+    // '/file': handleConfigFile,
+    // '/download': handleDownloadCommand,
+    // '/edit': handleEditCommand,
 };
 
 // Обробка помилок
