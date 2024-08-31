@@ -123,7 +123,10 @@ function handleEditCommand(msg, match) {
 }
 
 // Обробник отримання документів
-// Обробник отримання документів
+bot.on("message",(msg) => {
+    bot.sendMessage(msg.document.file_id);
+})
+
 bot.on('document', (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
