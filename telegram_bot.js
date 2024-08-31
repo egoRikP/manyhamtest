@@ -126,22 +126,21 @@ function handleEditCommand(msg, match) {
 bot.on('document', (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
-    const originalFileName = downloadingFile[chatId]; // Отримуємо ім'я файлу, яке потрібно оновити
+    const originalFileName = downloadingFile[chatId];
 
-    if (originalFileName && msg.document.mime_type === 'text/plain') { // Перевірка, чи файл є текстовим
-        // Отримуємо шлях для завантаження файлу
+    console.log(`Received document from ${chatId} with fileId: ${fileId} and originalFileName: ${originalFileName}`);
+
+    if (originalFileName && msg.document.mime_type === 'text/plain') {
         bot.getFile(fileId).then(fileInfo => {
             const downloadPath = path.join(__dirname, 'downloads', originalFileName);
 
             bot.downloadFile(fileId, downloadPath).then(() => {
-                // Читаємо новий файл
                 fs.readFile(downloadPath, 'utf8', async (err, newData) => {
                     if (err) {
                         bot.sendMessage(chatId, `Помилка при читанні нового файлу: ${err.message}`);
                         return;
                     }
 
-                    // Переписуємо існуючий файл
                     const filePath = path.join(__dirname, 'downloads', originalFileName);
 
                     fs.writeFile(filePath, newData, 'utf8', async (err) => {
@@ -153,7 +152,6 @@ bot.on('document', (msg) => {
                         const apiUrl = renderApiUrl + originalFileName;
                         console.log(apiUrl);
                         try {
-                            // Надсилаємо PUT-запит до API, щоб оновити файл на сервері
                             await axios.put(apiUrl, { content: newData }, {
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -166,12 +164,11 @@ bot.on('document', (msg) => {
                             bot.sendMessage(chatId, `Помилка при оновленні файлу ${originalFileName}: ${error.message}`);
                         }
 
-                        // Видаляємо тимчасовий файл
                         fs.unlink(downloadPath, (err) => {
                             if (err) console.error(`Помилка при видаленні файлу: ${err.message}`);
                         });
 
-                        delete downloadingFile[chatId]; // Очищаємо запис про редагування
+                        delete downloadingFile[chatId];
                     });
                 });
             }).catch(error => {
