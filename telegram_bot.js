@@ -10,7 +10,7 @@ const groupId = '-4268517821';
 const bot = new TelegramBot(token, { polling: true });
 const fileDirectory = '/etc/secrets'; // Директорія для файлів
 const renderApiUrl = 'https://api.render.com/v1/services/srv-cpnv6f88fa8c73b81s6g/secret-files/'; // URL API
-const bearerToken = 'rnd_qjosDe6So5BiRkKItOsErZEuxQyz'; // Bearer Token
+const bearerToken = 'rnd_04BLXty0HtthUCkb8AzBXVda5zSY'; // Bearer Token
 
 let downloadingFile = {}; // Зберігає інформацію про файл, який завантажується
 
@@ -97,7 +97,7 @@ function handleDownloadCommand(msg, match) {
     const filePath = path.join(fileDirectory, fileName);
 
     // Якщо файл існує локально, надсилаємо його до групи
-    // if (fs.existsSync(filePath)) {
+    if (fs.existsSync(filePath)) {
         bot.sendDocument(groupId, filePath)
             .then(() => {
                 bot.sendMessage(chatId, `Файл ${fileName} успішно надіслано до групи.`);
@@ -105,7 +105,7 @@ function handleDownloadCommand(msg, match) {
             .catch(error => {
                 bot.sendMessage(chatId, `Помилка при надсиланні файлу ${fileName} до групи: ${error.message}`);
             });
-    // }
+    }
 }
 
 // Обробник команди /edit
@@ -151,7 +151,7 @@ bot.on('document', (msg) => {
                         }
 
                         const apiUrl = renderApiUrl + originalFileName;
-
+                        console.log(apiUrl);
                         try {
                             // Надсилаємо PUT-запит до API, щоб оновити файл на сервері
                             await axios.put(apiUrl, { content: newData }, {
