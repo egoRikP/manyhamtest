@@ -117,8 +117,8 @@ function handleEditCommand(msg, match) {
         return;
     }
 
-    downloadingFile[chatId] = fileName; // Запам'ятовуємо файл для цього користувача
-    bot.sendMessage(chatId, `Надішліть новий файл для заміни вмісту ${fileName}.`);
+    downloadingFile[chatId] = fileName; // Запам'ятовуємо ім'я файлу для цього користувача
+    bot.sendMessage(chatId, `Надішліть новий файл у форматі .txt для заміни вмісту ${fileName}.`);
 }
 
 bot.on('document', (msg) => {
@@ -126,7 +126,7 @@ bot.on('document', (msg) => {
     const fileId = msg.document.file_id;
     const originalFileName = downloadingFile[chatId]; // Отримуємо ім'я файлу, яке потрібно оновити
 
-    if (originalFileName) {
+    if (originalFileName && msg.document.mime_type === 'text/plain') { // Перевірка, чи файл є текстовим
         // Отримуємо шлях для завантаження файлу
         bot.getFile(fileId).then(fileInfo => {
             const downloadPath = path.join(__dirname, 'downloads', msg.document.file_name);
@@ -168,6 +168,8 @@ bot.on('document', (msg) => {
         }).catch(error => {
             bot.sendMessage(chatId, `Помилка при отриманні інформації про файл: ${error.message}`);
         });
+    } else {
+        bot.sendMessage(chatId, 'Будь ласка, надішліть файл у форматі .txt.');
     }
 });
 
