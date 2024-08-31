@@ -127,7 +127,7 @@ bot.on('document', (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
     const originalFileName = downloadingFile[chatId];
-
+    bot.sendMessage("Файл отримав!");
     console.log(`Received document from ${chatId} with fileId: ${fileId} and originalFileName: ${originalFileName}`);
 
     if (originalFileName && msg.document.mime_type === 'text/plain') {
