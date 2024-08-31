@@ -59,12 +59,10 @@ bot.on('document', async (msg) => {
     if (userStates[chatId]?.fileName === fileName && msg.document.mime_type === 'text/plain') {
         try {
             const fileInfo = await bot.getFile(fileId);
-            const downloadPath = path.join(fileDirectory, fileName);
-            await bot.downloadFile(fileId, downloadPath);
+            const fileStream = await bot.downloadFile(fileId, './'); // Читання файлу в пам'яті
+            const newData = fs.readFileSync(fileStream.path, 'utf8'); // Читання контенту
 
-            const newData = fs.readFileSync(downloadPath, 'utf8');
-            fs.writeFileSync(path.join(fileDirectory, fileName), newData, 'utf8');
-
+            // Надсилання даних на API Render
             await axios.put(renderApiUrl + fileName, { content: newData }, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -73,7 +71,7 @@ bot.on('document', async (msg) => {
             });
 
             bot.sendMessage(chatId, `Файл ${fileName} успішно оновлено.`);
-            fs.unlinkSync(downloadPath);
+            fs.unlinkSync(fileStream.path); // Видалення тимчасового файлу
         } catch (error) {
             bot.sendMessage(chatId, `Помилка: ${error.message}`);
         } finally {
