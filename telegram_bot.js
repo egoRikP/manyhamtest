@@ -46,52 +46,66 @@ bot.onText(/\/edit (.+)/, (msg, match) => {
     bot.sendMessage(chatId, `Чекаю на новий контент для файлу ${fileName} у форматі .txt.`);
 });
 
-bot.on("message", async (msg) => {
-    console.log("message");
-    console.log(msg);
-})
-
-bot.on("document", async (msg) => {
-    console.log("document");
-    console.log(msg);
-})
-
+// Обробник для файлів
 bot.on('document', async (msg) => {
     const chatId = msg.chat.id;
     const fileId = msg.document.file_id;
-    const fileName = msg.document.file_name;
 
-    console.log(chatId,fileId,fileName);
+    try {
+        // Завантаження файлу
+        const fileLink = await bot.getFileLink(fileId);
+        const file = await bot.downloadFile(fileLink);
 
-    if (userStates[chatId]?.fileName === fileName && msg.document.mime_type === 'text/plain') {
-        try {
-            // Отримання інформації про файл
-            const fileInfo = await bot.getFile(fileId);
-            const filePath = path.join(__dirname, fileId + '.txt');
-            const fileStream = await bot.downloadFile(fileId, __dirname);
+        // Читання файлу
+        const content = fs.readFileSync(file.path, 'utf8');
 
-            // Читання контенту файлу
-            const newData = fs.readFileSync(filePath, 'utf8');
-
-            // Надсилання даних на API Render
-            await axios.put(renderApiUrl + fileName, { content: newData }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${bearerToken}`
-                }
-            });
-
-            bot.sendMessage(chatId, `Файл ${fileName} успішно оновлено.`);
-            fs.unlinkSync(filePath); // Clean up temporary file
-        } catch (error) {
-            bot.sendMessage(chatId, `Помилка: ${error.message}`);
-        } finally {
-            delete userStates[chatId];
-        }
-    } else {
-        bot.sendMessage(chatId, 'Немає активного запиту на файл. Використовуйте команду /edit для старту.');
+        // Відправка вмісту
+        await bot.sendMessage(chatId, content);
+    } catch (error) {
+        console.error('Error:', error);
+        await bot.sendMessage(chatId, 'Виникла помилка при обробці файлу.');
+    } finally {
+        // Видалення тимчасового файлу
+        fs.unlinkSync(file.path);
     }
 });
+
+// bot.on('document', async (msg) => {
+//     const chatId = msg.chat.id;
+//     const fileId = msg.document.file_id;
+//     const fileName = msg.document.file_name;
+
+//     console.log(chatId,fileId,fileName);
+
+//     if (userStates[chatId]?.fileName === fileName && msg.document.mime_type === 'text/plain') {
+//         try {
+//             // Отримання інформації про файл
+//             const fileInfo = await bot.getFile(fileId);
+//             const filePath = path.join(__dirname, fileId + '.txt');
+//             const fileStream = await bot.downloadFile(fileId, __dirname);
+
+//             // Читання контенту файлу
+//             const newData = fs.readFileSync(filePath, 'utf8');
+
+//             // Надсилання даних на API Render
+//             await axios.put(renderApiUrl + fileName, { content: newData }, {
+//                 headers: {
+//                     'Content-Type': 'application/json',
+//                     'Authorization': `Bearer ${bearerToken}`
+//                 }
+//             });
+
+//             bot.sendMessage(chatId, `Файл ${fileName} успішно оновлено.`);
+//             fs.unlinkSync(filePath); // Clean up temporary file
+//         } catch (error) {
+//             bot.sendMessage(chatId, `Помилка: ${error.message}`);
+//         } finally {
+//             delete userStates[chatId];
+//         }
+//     } else {
+//         bot.sendMessage(chatId, 'Немає активного запиту на файл. Використовуйте команду /edit для старту.');
+//     }
+// });
 
 // Створюємо директорію, якщо її ще не існує
 if (!fs.existsSync(fileDirectory)) {
