@@ -103,6 +103,7 @@ function handleDownloadCommand(msg, match) {
                 bot.sendMessage(chatId, `Помилка при читанні файлу ${fileName}: ${err.message}`);
                 return;
             }
+            console.log(Buffer.from(fileData, 'utf8'));
             bot.sendDocument(chatId, { source: Buffer.from(fileData, 'utf8'), filename: fileName });
         });
     } else {
