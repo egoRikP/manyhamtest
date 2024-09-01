@@ -16,6 +16,8 @@ function loadConfig() {
 const config = loadConfig();
 const games = config.games;
 
+console.log("PROMOCODE LOGIC START!");
+
 // Завантаження проксі
 function loadProxies() {
     let proxies = [];
