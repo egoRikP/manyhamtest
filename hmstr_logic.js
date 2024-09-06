@@ -164,7 +164,7 @@ function proccessTokensDaily(tokens) {
 const dailyMoney = async (token) => {
     try {
         const response = await axios.post("https://api.hamsterkombat.io/clicker/check-task", {
-            "taskId":"streak_days"
+            "taskId":"streak_days_special"
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`
